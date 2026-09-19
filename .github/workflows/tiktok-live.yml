@@ -1,0 +1,32 @@
+name: TikTok Live Watcher
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: tiktok-live-watcher
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment: my
+    timeout-minutes: 360
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Watch TikTok
+        env:
+          TG_KEY: ${{ secrets.TG_KEY }}
+          TT_ID: ${{ secrets.TT_ID }}
+          TT_CHANNEL: ${{ secrets.TT_CHANNEL }}
+        run: python main.py
