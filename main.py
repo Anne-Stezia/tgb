@@ -1,13 +1,11 @@
 from TikTokLive import TikTokLiveClient
 from TikTokLive.events import ConnectEvent
+from TikTokLive.client.errors import UserOfflineError
 import os
 import telebot
 
 bot = telebot.TeleBot(os.environ["TG_KEY"])
-
-client = TikTokLiveClient(
-    unique_id=os.environ["TT_ID"]
-)
+client = TikTokLiveClient(unique_id=os.environ["TT_ID"])
 
 
 @client.on(ConnectEvent)
@@ -19,4 +17,7 @@ async def on_connect(event: ConnectEvent):
 
 
 if __name__ == "__main__":
-    client.run()
+    try:
+        client.run()
+    except UserOfflineError:
+        print("TikTok user is offline")
