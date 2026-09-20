@@ -4,7 +4,7 @@ from pathlib import Path
 
 import telebot
 from TikTokLive import TikTokLiveClient
-from TikTokLive.client.errors import UserOfflineError
+from TikTokLive.client.errors import UserOfflineError, UserNotFoundError
 
 
 STATE_FILE = Path("last_room_id.txt")
@@ -14,9 +14,7 @@ async def main():
     client = TikTokLiveClient(unique_id=os.environ["TT_ID"])
 
     try:
-        # start(), в отличие от прямого fetch_room_id_from_html(),
-        # использует штатный fallback TikTokLive при проблемах с HTML.
-        task = await client.start()
+        await client.start()
 
         room_id = str(client.room_id)
 
@@ -41,14 +39,16 @@ async def main():
             "🚨 AnneStezia зараз стрімить"
         )
 
-        # Только после успешного Telegram
         STATE_FILE.write_text(room_id)
 
         print("Telegram notification sent")
         print(f"Saved new Room ID: {room_id}")
 
-    except UserOfflineError:
-        print("TikTok user is offline")
+    except (UserOfflineError, UserNotFoundError) as e:
+        print(
+            f"TikTok LIVE is not available: "
+            f"{type(e).__name__}"
+        )
 
     finally:
         if client.connected:
