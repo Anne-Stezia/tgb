@@ -2,8 +2,11 @@ name: TikTok Live Watcher
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "5,15,25,35,45,55 * * * *"
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 concurrency:
   group: tiktok-live-watcher
@@ -13,10 +16,12 @@ jobs:
   check:
     runs-on: ubuntu-24.04
     environment: my
-    timeout-minutes: 360
+    timeout-minutes: 5
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v7
         with:
@@ -24,9 +29,23 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Watch TikTok
+      - name: Check TikTok
         env:
           TG_KEY: ${{ secrets.TG_KEY }}
           TT_ID: ${{ secrets.TT_ID }}
           TT_CHANNEL: ${{ secrets.TT_CHANNEL }}
         run: python main.py
+
+      - name: Save state
+        run: |
+          if git diff --quiet last_room_id.txt; then
+            echo "State unchanged"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add last_room_id.txt
+          git commit -m "Update TikTok live state"
+          git push
