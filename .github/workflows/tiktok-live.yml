@@ -19,15 +19,18 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v7
+      - name: Setup Python
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
-      - run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
       - name: Check TikTok
         env:
@@ -38,7 +41,14 @@ jobs:
 
       - name: Save state
         run: |
-          if git diff --quiet last_room_id.txt; then
+          if [ ! -f last_room_id.txt ]; then
+            echo "No state change"
+            exit 0
+          fi
+
+          git add last_room_id.txt
+
+          if git diff --cached --quiet; then
             echo "State unchanged"
             exit 0
           fi
@@ -46,6 +56,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add last_room_id.txt
           git commit -m "Update TikTok live state"
           git push
